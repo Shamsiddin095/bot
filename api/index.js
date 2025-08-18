@@ -57,7 +57,10 @@ clientBot.on('text', async (ctx) => {
     session.step = 'get_phone';
   } else if (session.step === 'category') {
   const category = ctx.message.text;
-  const products = await db.collection('botProducts').find({ category }).toArray();
+  const products = await db.collection('botProducts').find({
+  category: { $regex: `^${category}$`, $options: 'i' }
+}).toArray();
+
   if (!products.length) return ctx.reply("Ushbu kategoriyada mahsulot yo'q.");
   session.step = 'product';
   session.currentCategory = category;
