@@ -1,0 +1,46 @@
+[
+  {
+    "name": "Coca-Cola 1L",
+    "category": "Ichimliklar",
+    "type": "Ichimlik",
+    "price": 12000,
+    "stock": 50,
+    "description": "Gazlangan ichimlik",
+    "usage": "Sovuq holda iching",
+    "image": "cola.jfif",
+    "image_hira": "cola.jfif"
+  },
+  {
+    "name": "Burger Classic",
+    "category": "Fastfood",
+    "type": "Burger",
+    "price": 25000,
+    "stock": 30,
+    "description": "Go‘shtli burger",
+    "usage": "Issiq holda yeying",
+    "image": "cola.jfif",
+    "image_hira": "cola.jfif"
+  },
+  {
+    "name": "Choco Cake",
+    "category": "Shirinliklar",
+    "type": "Keks",
+    "price": 15000,
+    "stock": 20,
+    "description": "Shokoladli keks",
+    "usage": "Kofe bilan yaxshi ketadi",
+    "image": "cola.jfif",
+    "image_hira": "cola.jfif"
+  },
+  {
+    "name": "Plov",
+    "category": "Milliy taomlar",
+    "type": "Ovqat",
+    "price": 40000,
+    "stock": 15,
+    "description": "O‘zbekcha palov",
+    "usage": "Issiq holda xizmat qiling",
+    "image": "cola.jfif",
+    "image_hira": "cola.jfif"
+  }
+]

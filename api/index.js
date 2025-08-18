@@ -1,6 +1,12 @@
 import 'dotenv/config';
 import { Telegraf, Markup } from 'telegraf';
 import { MongoClient, ObjectId } from 'mongodb';
+import path from "path";
+import { fileURLToPath } from "url";
+
+// ESM uchun __dirname olish
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // --- Environment ---
 const BOT_TOKEN_CLIENT = process.env.BOT_TOKEN_CLIENT;
@@ -31,9 +37,7 @@ function getSession(chatId) {
   return sessions[chatId];
 }
 
-// ------------------
-// 1️⃣ Mijoz bot
-// ------------------
+// --- Client Bot Handlers ---
 clientBot.start(async (ctx) => {
   const session = getSession(ctx.chat.id);
   session.cart = [];
@@ -52,21 +56,32 @@ clientBot.on('text', async (ctx) => {
     ]).oneTime().resize());
     session.step = 'get_phone';
   } else if (session.step === 'category') {
-    const category = ctx.message.text;
-    const products = await db.collection('botProducts').find({ category }).toArray();
-    if (!products.length) return ctx.reply("Ushbu kategoriyada mahsulot yo'q.");
-    session.step = 'product';
-    session.currentCategory = category;
-    for (const p of products) {
-      const available = p.stock > 0;
-      await ctx.replyWithPhoto(
-        { url: available ? p.image : p.image_hira },
-        { caption: `${p.name}\nNarxi: ${p.price} so'm`, reply_markup: Markup.inlineKeyboard([
-          available ? Markup.button.callback('Savatga qo\'shish', `add_${p._id}`) : Markup.button.callback('Sotuvda yo\'q', 'none')
-        ]) }
-      );
-    }
-  } else if (session.step === 'payment') {
+  const category = ctx.message.text;
+  const products = await db.collection('botProducts').find({ category }).toArray();
+  if (!products.length) return ctx.reply("Ushbu kategoriyada mahsulot yo'q.");
+  session.step = 'product';
+  session.currentCategory = category;
+
+  for (const p of products) {
+    const available = p.stock > 0;
+
+    const imgPath = path.join(__dirname, "img", available ? p.image : p.image_hira);
+
+    await ctx.replyWithPhoto(
+      { source: imgPath },
+      {
+        caption: `${p.name}\nNarxi: ${p.price} so'm`,
+        reply_markup: Markup.inlineKeyboard([
+          available
+            ? Markup.button.callback("Savatga qo'shish", `add_${p._id}`)
+            : Markup.button.callback("Sotuvda yo'q", "none")
+        ])
+      }
+    );
+  }
+}
+
+   else if (session.step === 'payment') {
     if (!['Naqd','Karta'].includes(ctx.message.text)) return;
     session.paymentType = ctx.message.text;
 
@@ -140,9 +155,7 @@ clientBot.on('callback_query', async (ctx) => {
   }
 });
 
-// ------------------
-// 2️⃣ Admin bot
-// ------------------
+// --- Admin Bot Handlers ---
 adminBot.on('text', async (ctx) => {
   const text = ctx.message.text;
   const db = await connectDB();
@@ -162,9 +175,7 @@ adminBot.on('text', async (ctx) => {
   }
 });
 
-// ------------------
-// 3️⃣ Dastafkachi bot
-// ------------------
+// --- Delivery Bot Handlers ---
 deliveryBot.on('text', async (ctx) => {
   const text = ctx.message.text;
   const db = await connectDB();
@@ -180,9 +191,7 @@ deliveryBot.on('text', async (ctx) => {
   }
 });
 
-// ------------------
-// Buyurtmani adminga yuborish funksiyasi
-// ------------------
+// --- Send Order To Admin ---
 async function sendOrderToAdmin(session) {
   const db = await connectDB();
 
@@ -208,9 +217,7 @@ async function sendOrderToAdmin(session) {
   }
 }
 
-// ------------------
-// Webhook handler
-// ------------------
+// --- Webhook handler ---
 export default async function handler(req, res) {
   try {
     if(req.method === 'POST') {
