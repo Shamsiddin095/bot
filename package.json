@@ -1,15 +1,16 @@
 {
-  "name": "dastafka-bot",
+  "name": "telegram-bot",
   "version": "1.0.0",
   "type": "module",
-  "main": "api/index.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node api/index.js"
+    "start": "node index.js"
   },
   "dependencies": {
-    "dotenv": "^17.2.1",
-    "mongodb": "^6.18.0",
-    "node-telegram-bot-api": "^0.66.0",
-    "telegraf": "^4.16.3"
+    "body-parser": "^1.20.3",
+    "dotenv": "^16.0.3",
+    "express": "^4.21.2",
+    "mongodb": "^6.9.0",
+    "telegraf": "^4.15.0"
   }
 }
