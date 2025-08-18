@@ -6,7 +6,7 @@ import { MongoClient, ObjectId } from 'mongodb';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// --- ESM __dirname --- 
+// --- ESM __dirname ---
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -16,7 +16,7 @@ const BOT_TOKEN_ADMIN = process.env.BOT_TOKEN_ADMIN;
 const BOT_TOKEN_DELIVERY = process.env.BOT_TOKEN_DELIVERY;
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
 const MONGO_URI = process.env.MONGO_URI;
-const APP_URL = process.env.APP_URL; // Render domeningiz, mas: https://my-bot.onrender.com
+const APP_URL = process.env.APP_URL;
 
 // --- MongoDB ---
 let db;
@@ -33,14 +33,14 @@ const clientBot = new Telegraf(BOT_TOKEN_CLIENT);
 const adminBot = new Telegraf(BOT_TOKEN_ADMIN);
 const deliveryBot = new Telegraf(BOT_TOKEN_DELIVERY);
 
-// --- Session ---
+// --- Sessions ---
 const sessions = {};
 function getSession(chatId) {
     if (!sessions[chatId]) sessions[chatId] = { cart: [] };
     return sessions[chatId];
 }
 
-// --- Client bot handlers ---
+// --- Client Bot Handlers ---
 clientBot.start(async (ctx) => {
     const session = getSession(ctx.chat.id);
     session.cart = [];
@@ -86,7 +86,6 @@ clientBot.on('text', async (ctx) => {
     }
 });
 
-// --- Contact handler ---
 clientBot.on('contact', async (ctx) => {
     const session = getSession(ctx.chat.id);
     if (session.step !== 'get_phone') return;
@@ -106,7 +105,6 @@ clientBot.on('contact', async (ctx) => {
     await showCategories(ctx);
 });
 
-// --- Callback query ---
 clientBot.on('callback_query', async (ctx) => {
     const data = ctx.callbackQuery.data;
     const session = getSession(ctx.chat.id);
@@ -122,7 +120,6 @@ clientBot.on('callback_query', async (ctx) => {
     }
 });
 
-// --- Show categories ---
 async function showCategories(ctx) {
     const session = getSession(ctx.chat.id);
     const buttons = [
@@ -134,7 +131,6 @@ async function showCategories(ctx) {
     session.step = 'category';
 }
 
-// --- Send order to admin ---
 async function sendOrderToAdmin(session) {
     const db = await connectDB();
     const order = {
@@ -157,27 +153,14 @@ async function sendOrderToAdmin(session) {
     }
 }
 
-// --- Express server for webhook ---
+// --- Express server ---
 const app = express();
 app.use(bodyParser.json());
 
-// Client webhook
-app.post('/client', async (req, res) => {
-    await clientBot.handleUpdate(req.body);
-    res.send('OK');
-});
-
-// Admin webhook
-app.post('/admin', async (req, res) => {
-    await adminBot.handleUpdate(req.body);
-    res.send('OK');
-});
-
-// Delivery webhook
-app.post('/delivery', async (req, res) => {
-    await deliveryBot.handleUpdate(req.body);
-    res.send('OK');
-});
+// Webhook endpoints
+app.post('/client', (req, res) => clientBot.handleUpdate(req.body).then(() => res.send('OK')));
+app.post('/admin', (req, res) => adminBot.handleUpdate(req.body).then(() => res.send('OK')));
+app.post('/delivery', (req, res) => deliveryBot.handleUpdate(req.body).then(() => res.send('OK')));
 
 app.get('/', (req, res) => res.send('Bot ishlayapti ✅'));
 
@@ -186,10 +169,12 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
     console.log(`Server ${PORT} portda ishlayapti`);
 
-    // --- Set webhooks ---
-    await clientBot.telegram.setWebhook(`${APP_URL}/client`);
-    await adminBot.telegram.setWebhook(`${APP_URL}/admin`);
-    await deliveryBot.telegram.setWebhook(`${APP_URL}/delivery`);
-
-    console.log('Webhooks o\'rnatildi ✅');
+    try {
+        await clientBot.telegram.setWebhook(`${APP_URL}/client`);
+        await adminBot.telegram.setWebhook(`${APP_URL}/admin`);
+        await deliveryBot.telegram.setWebhook(`${APP_URL}/delivery`);
+        console.log('Webhooks o\'rnatildi ✅');
+    } catch (err) {
+        console.error('Webhook o‘rnatishda xatolik:', err);
+    }
 });
